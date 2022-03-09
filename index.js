@@ -2,7 +2,7 @@ const { customAlphabet, nanoid } = require('nanoid');
 
 let generateId = nanoid
 
-function nanoidPlugin(schema, { length, alphabet }) {
+function nanoidPlugin(schema, { length, alphabet, prefix, postfix }) {
     if (schema.options._id !== undefined && schema.options._id === false) return;
 
     length = length || 12;
@@ -11,13 +11,16 @@ function nanoidPlugin(schema, { length, alphabet }) {
         generateId = customAlphabet(alphabet, length);
     }
 
+    prefix = schema.options._idPrefix || '';
+    postfix = schema.options._idPostfix || '';
+
     let _id = '_id';
     const dataObj = {};
 
     dataObj[_id] = {
         type: String,
         default: function () {
-            return generateId(length)
+            return prefix + generateId(length) + postfix
         }
     };
 
@@ -26,7 +29,7 @@ function nanoidPlugin(schema, { length, alphabet }) {
         if (this.isNew && !this.constructor.$isArraySubdocument) {
             attemptToGenerate(this, length)
                 .then(function (newId) {
-                    this[_id] = newId;
+                    this[_id] = prefix + newId + postfix;
                     next()
                 })
                 .catch(next)
